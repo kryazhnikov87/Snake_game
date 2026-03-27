@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snake</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="panel">
+        <div class="status">
+          <div>
+            <p class="label">Score</p>
+            <p class="value" id="score">0</p>
+          </div>
+          <div>
+            <p class="label">Best</p>
+            <p class="value" id="best-score">0</p>
+          </div>
+          <div>
+            <p class="label">State</p>
+            <p class="value" id="state">Running</p>
+          </div>
+        </div>
+
+        <div class="board-wrap">
+          <div
+            id="board"
+            class="board"
+            role="grid"
+            aria-label="Snake board"
+          ></div>
+        </div>
+
+        <div class="actions">
+          <button id="pause-button" type="button">Pause</button>
+          <button id="restart-button" type="button">Restart</button>
+        </div>
+
+        <div class="controls" aria-label="Directional controls">
+          <button class="control control-up" data-direction="up" type="button">Up</button>
+          <button class="control control-left" data-direction="left" type="button">Left</button>
+          <button class="control control-down" data-direction="down" type="button">Down</button>
+          <button class="control control-right" data-direction="right" type="button">Right</button>
+        </div>
+
+        <p class="hint">Use arrow keys or WASD. Press space to pause and R to restart.</p>
+      </section>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
