@@ -64,6 +64,47 @@ function createLevelTwoWalls(gridSize) {
   return walls;
 }
 
+function createLevelThreeWalls(gridSize) {
+  const width = Math.floor(gridSize * 0.57);
+  const height = Math.floor(gridSize * 0.54);
+  const thickness = Math.max(1, Math.floor(gridSize * 0.07));
+  const centerX = Math.floor(gridSize / 2);
+  const startY = Math.floor((gridSize - height) / 2);
+  const maxHalfWidth = Math.floor(width / 2);
+  const wallMap = new Map();
+
+  function addWall(x, y) {
+    if (x < 0 || y < 0 || x >= gridSize || y >= gridSize) {
+      return;
+    }
+
+    wallMap.set(`${x},${y}`, { x, y });
+  }
+
+  for (let row = 0; row < height; row += 1) {
+    const offset = Math.max(1, Math.floor((row * maxHalfWidth) / Math.max(1, height - 1)));
+    const y = startY + row;
+    const leftX = centerX - offset;
+    const rightX = centerX + offset;
+
+    for (let t = 0; t < thickness; t += 1) {
+      addWall(leftX + t, y);
+      addWall(rightX - t, y);
+    }
+  }
+
+  const crossbarRow = startY + Math.floor(height * 0.5);
+  const crossbarOffset = Math.max(thickness + 1, Math.floor(maxHalfWidth * 0.45));
+
+  for (let y = crossbarRow; y < crossbarRow + thickness; y += 1) {
+    for (let x = centerX - crossbarOffset; x <= centerX + crossbarOffset; x += 1) {
+      addWall(x, y);
+    }
+  }
+
+  return [...wallMap.values()];
+}
+
 const LEVELS = [
   {
     id: "level-1",
@@ -82,11 +123,24 @@ const LEVELS = [
     label: "Level 2",
     introButton: "Start",
     introCaption: "Press Space to start",
+    targetScore: 20,
+    createState: () =>
+      createInitialState({
+        gridSize: GRID_SIZE * 2,
+        walls: createLevelTwoWalls(GRID_SIZE * 2),
+        targetScore: 20
+      })
+  },
+  {
+    id: "level-3",
+    label: "Level 3",
+    introButton: "Start",
+    introCaption: "Press Space to start",
     targetScore: null,
     createState: () =>
       createInitialState({
         gridSize: GRID_SIZE * 2,
-        walls: createLevelTwoWalls(GRID_SIZE * 2)
+        walls: createLevelThreeWalls(GRID_SIZE * 2)
       })
   }
 ];
@@ -165,9 +219,19 @@ function getOverlayConfig() {
 }
 
 function applyLevelClassNames() {
+  const isDenseLevel = getCurrentLevel().id === "level-2" || getCurrentLevel().id === "level-3";
+
   panel.classList.toggle("level-2", getCurrentLevel().id === "level-2");
+  panel.classList.toggle("level-3", getCurrentLevel().id === "level-3");
+  panel.classList.toggle("dense-level", isDenseLevel);
+
   board.classList.toggle("level-2", getCurrentLevel().id === "level-2");
+  board.classList.toggle("level-3", getCurrentLevel().id === "level-3");
+  board.classList.toggle("dense-level", isDenseLevel);
+
   splashScreen.classList.toggle("level-2", getCurrentLevel().id === "level-2");
+  splashScreen.classList.toggle("level-3", getCurrentLevel().id === "level-3");
+  splashScreen.classList.toggle("dense-level", isDenseLevel);
 }
 
 function renderBoard() {
@@ -222,7 +286,7 @@ function render() {
   pauseButton.textContent = state.status === "paused" ? "Resume" : "Pause";
   pauseButton.disabled = !isPlaying() || state.status === "game-over" || state.status === "won";
   eatButton.disabled = overlayMode === OVERLAY_LEVEL_CLEAR || state.status === "game-over";
-  nextLevelButton.disabled = currentLevelIndex >= LEVELS.length - 1;
+  nextLevelButton.disabled = getCurrentLevel().id === "level-3";
 }
 
 function resetCurrentLevel() {
@@ -243,7 +307,7 @@ function goToNextLevelIntro() {
 }
 
 function goToNextLevel() {
-  if (currentLevelIndex >= LEVELS.length - 1) {
+  if (getCurrentLevel().id === "level-3") {
     return;
   }
 
