@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Snake</title>
     <link rel="stylesheet" href="./src/styles.css" />
+    <link rel="stylesheet" href="./src/level2.css" />
   </head>
   <body>
     <main class="app">
@@ -26,6 +27,17 @@
 
         <div class="board-wrap">
           <div
+            id="splash-screen"
+            class="splash-screen"
+            aria-label="Game overlay"
+          >
+            <div class="splash-content">
+              <p id="splash-title" class="splash-title">Level 1</p>
+              <button id="start-button" type="button">Start</button>
+              <p id="splash-caption" class="splash-caption">Press Space to start</p>
+            </div>
+          </div>
+          <div
             id="board"
             class="board"
             role="grid"
@@ -36,6 +48,8 @@
         <div class="actions">
           <button id="pause-button" type="button">Pause</button>
           <button id="restart-button" type="button">Restart</button>
+          <button id="eat-button" type="button">Eat</button>
+          <button id="next-level-button" type="button">Next Level</button>
         </div>
 
         <div class="controls" aria-label="Directional controls">

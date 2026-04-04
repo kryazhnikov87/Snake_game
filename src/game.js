@@ -1,10 +1,5 @@
 export const GRID_SIZE = 14;
 export const INITIAL_DIRECTION = "right";
-export const INITIAL_SNAKE = [
-  { x: 2, y: 7 },
-  { x: 1, y: 7 },
-  { x: 0, y: 7 }
-];
 
 export const DIRECTION_VECTORS = {
   up: { x: 0, y: -1 },
@@ -24,21 +19,88 @@ function positionsMatch(a, b) {
   return a.x === b.x && a.y === b.y;
 }
 
+function getInitialSnake(gridSize = GRID_SIZE) {
+  const centerY = Math.floor(gridSize / 2);
+  return [
+    { x: 2, y: centerY },
+    { x: 1, y: centerY },
+    { x: 0, y: centerY }
+  ];
+}
+
 export function randomInt(max, random = Math.random) {
   return Math.floor(random() * max);
 }
 
-export function createFood(snake, gridSize = GRID_SIZE, random = Math.random) {
-  const openCells = [];
+function isBlockedCell(position, blockedCells = []) {
+  return blockedCells.some((cell) => positionsMatch(cell, position));
+}
 
-  for (let y = 0; y < gridSize; y += 1) {
-    for (let x = 0; x < gridSize; x += 1) {
-      const occupied = snake.some((segment) => segment.x === x && segment.y === y);
-      if (!occupied) {
-        openCells.push({ x, y });
+function getReachableOpenCells(snake, gridSize, blockedCells = []) {
+  const occupiedKeys = new Set(snake.map((segment) => `${segment.x},${segment.y}`));
+  const blockedKeys = new Set(blockedCells.map((cell) => `${cell.x},${cell.y}`));
+  const visited = new Set([`${snake[0].x},${snake[0].y}`]);
+  const queue = [snake[0]];
+  const reachable = [];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+
+    for (const vector of Object.values(DIRECTION_VECTORS)) {
+      const next = {
+        x: current.x + vector.x,
+        y: current.y + vector.y
+      };
+      const key = `${next.x},${next.y}`;
+
+      if (visited.has(key) || isOutOfBounds(next, gridSize) || blockedKeys.has(key)) {
+        continue;
+      }
+
+      visited.add(key);
+      queue.push(next);
+
+      if (!occupiedKeys.has(key)) {
+        reachable.push(next);
       }
     }
   }
+
+  return reachable;
+}
+
+function normalizeInitialStateOptions(randomOrOptions, legacyGridSize) {
+  const defaults = {
+    random: Math.random,
+    gridSize: GRID_SIZE,
+    initialDirection: INITIAL_DIRECTION,
+    initialSnake: getInitialSnake(GRID_SIZE),
+    walls: [],
+    targetScore: null
+  };
+
+  if (typeof randomOrOptions === "function") {
+    return {
+      ...defaults,
+      random: randomOrOptions,
+      gridSize: legacyGridSize,
+      initialSnake: getInitialSnake(legacyGridSize)
+    };
+  }
+
+  return {
+    ...defaults,
+    ...randomOrOptions
+  };
+}
+
+export function createFood(
+  snake,
+  gridSize = GRID_SIZE,
+  random = Math.random,
+  blockedCells = []
+) {
+  const openCells = getReachableOpenCells(snake, gridSize, blockedCells);
 
   if (openCells.length === 0) {
     return null;
@@ -47,15 +109,21 @@ export function createFood(snake, gridSize = GRID_SIZE, random = Math.random) {
   return openCells[randomInt(openCells.length, random)];
 }
 
-export function createInitialState(random = Math.random, gridSize = GRID_SIZE) {
+export function createInitialState(randomOrOptions = Math.random, legacyGridSize = GRID_SIZE) {
+  const options = normalizeInitialStateOptions(randomOrOptions, legacyGridSize);
+  const initialSnake = (options.initialSnake ?? getInitialSnake(options.gridSize)).map((segment) => ({ ...segment }));
+  const walls = (options.walls ?? []).map((wall) => ({ ...wall }));
+
   return {
-    gridSize,
-    snake: INITIAL_SNAKE.map((segment) => ({ ...segment })),
-    direction: INITIAL_DIRECTION,
-    nextDirection: INITIAL_DIRECTION,
-    food: createFood(INITIAL_SNAKE, gridSize, random),
+    gridSize: options.gridSize,
+    snake: initialSnake,
+    direction: options.initialDirection,
+    nextDirection: options.initialDirection,
+    food: createFood(initialSnake, options.gridSize, options.random, walls),
     score: 0,
-    status: "running"
+    status: "running",
+    walls,
+    targetScore: options.targetScore
   };
 }
 
@@ -103,6 +171,10 @@ export function isOutOfBounds(position, gridSize = GRID_SIZE) {
   );
 }
 
+export function hasWallCollision(position, walls = []) {
+  return walls.some((wall) => positionsMatch(position, wall));
+}
+
 export function hasSelfCollision(snake) {
   const [head, ...body] = snake;
   return body.some((segment) => positionsMatch(segment, head));
@@ -117,6 +189,15 @@ export function stepGame(state, random = Math.random) {
   const nextHead = getNextHead(state.snake[0], direction);
 
   if (isOutOfBounds(nextHead, state.gridSize)) {
+    return {
+      ...state,
+      direction,
+      nextDirection: direction,
+      status: "game-over"
+    };
+  }
+
+  if (hasWallCollision(nextHead, state.walls)) {
     return {
       ...state,
       direction,
@@ -142,15 +223,19 @@ export function stepGame(state, random = Math.random) {
     };
   }
 
-  const nextFood = eating ? createFood(nextSnake, state.gridSize, random) : state.food;
+  const nextScore = eating ? state.score + 1 : state.score;
+  const reachedTarget = state.targetScore !== null && nextScore >= state.targetScore;
+  const nextFood = eating && !reachedTarget
+    ? createFood(nextSnake, state.gridSize, random, state.walls)
+    : state.food;
 
   return {
     ...state,
     direction,
     nextDirection: direction,
     snake: nextSnake,
-    food: nextFood,
-    score: eating ? state.score + 1 : state.score,
-    status: nextFood ? "running" : "won"
+    food: reachedTarget ? null : nextFood,
+    score: nextScore,
+    status: reachedTarget || !nextFood ? "won" : "running"
   };
 }
