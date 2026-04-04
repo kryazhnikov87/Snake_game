@@ -1,0 +1,41 @@
+.panel.level-2 {
+  box-shadow: 10px 10px 0 rgba(32, 26, 22, 0.18);
+}
+
+.board.level-2 {
+  gap: 1px;
+  background: #c7d5c6;
+}
+
+.board.level-2 .cell {
+  background: #eef4ea;
+}
+
+.board.level-2 .snake-head {
+  background-color: #245a41;
+  background-image: url("./varvara.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.board.level-2 .snake-body {
+  background: #5e9c76;
+}
+
+.board.level-2 .food {
+  background: #7a1f2b;
+  box-shadow: inset 0 0 0 1px rgba(255, 240, 240, 0.35);
+}
+
+.board.level-2 .wall {
+  background: #6b4a35;
+}
+
+.splash-screen.level-2 {
+  background-color: #eef4ea;
+  background-image:
+    linear-gradient(#c7d5c6 1px, transparent 1px),
+    linear-gradient(90deg, #c7d5c6 1px, transparent 1px);
+  background-size: calc((100% - 27px) / 28) calc((100% - 27px) / 28);
+}
