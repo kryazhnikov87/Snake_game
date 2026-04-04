@@ -2,17 +2,21 @@
 
 Classic Snake built as a small dependency-free browser app.
 
-## Run
+## Quick start
 
 ```bash
+cd /path/to/Snake_game
 npm start
 ```
 
-Then open `http://localhost:4173`.
+This starts a local static server for the game.
 
-## Test
+Open the game at `http://localhost:4173`.
+
+## Auto-tests
 
 ```bash
+cd /path/to/Snake_game
 npm test
 ```
 
